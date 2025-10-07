@@ -119,14 +119,10 @@ class CartService
             $totalQuantity += $item->quantity;
         }
 
-        // Calculate tax (example: 10%)
-        $taxRate = 0.10;
-        $tax = $subtotal * $taxRate;
-
-        // Calculate shipping (example: free shipping over $100)
-        $shipping = $subtotal >= 100 ? 0 : 10;
-
-        $total = $subtotal + $tax + $shipping;
+        // No tax and free shipping - only product price
+        $tax = 0;
+        $shipping = 0;
+        $total = $subtotal;
 
         return [
             'items' => $cartItems,

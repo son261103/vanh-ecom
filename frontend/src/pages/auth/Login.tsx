@@ -26,7 +26,7 @@ export const Login: React.FC = () => {
       if (userRole === 'admin') {
         navigate('/admin/dashboard');
       } else {
-        navigate('/user/dashboard');
+        navigate('/user/home');
       }
     } catch (error) {
       // Error is handled by authStore with toast notification

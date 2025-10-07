@@ -7,22 +7,26 @@ import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Pagination } from '../../../components/shared/Pagination';
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
   processing: 'bg-purple-100 text-purple-800',
   shipped: 'bg-indigo-100 text-indigo-800',
   delivered: 'bg-green-100 text-green-800',
   cancelled: 'bg-red-100 text-red-800',
+  completed: 'bg-teal-100 text-teal-800',
+  refunded: 'bg-orange-100 text-orange-800',
 };
 
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   pending: 'Chờ xác nhận',
   confirmed: 'Đã xác nhận',
   processing: 'Đang xử lý',
   shipped: 'Đang giao',
   delivered: 'Đã giao',
   cancelled: 'Đã hủy',
+  completed: 'Hoàn thành',
+  refunded: 'Hoàn tiền',
 };
 
 export const AdminOrderList: React.FC = () => {
@@ -106,7 +110,9 @@ export const AdminOrderList: React.FC = () => {
               <option value="processing">Đang xử lý</option>
               <option value="shipped">Đang giao</option>
               <option value="delivered">Đã giao</option>
+              <option value="completed">Hoàn thành</option>
               <option value="cancelled">Đã hủy</option>
+              <option value="refunded">Hoàn tiền</option>
             </select>
           </div>
         </div>
@@ -167,7 +173,7 @@ export const AdminOrderList: React.FC = () => {
                         {new Intl.NumberFormat('vi-VN', {
                           style: 'currency',
                           currency: 'VND',
-                        }).format(order.total)}
+                        }).format(parseFloat(order.total_amount?.toString() || '0'))}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

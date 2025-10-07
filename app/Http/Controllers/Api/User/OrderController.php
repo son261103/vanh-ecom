@@ -80,7 +80,13 @@ class OrderController extends Controller
             ], 404);
         }
 
-        $order->load(['items.product.images']);
+        // Load order items with complete product details
+        $order->load([
+            'user',
+            'items.product.images',
+            'items.product.brand',
+            'items.product.category'
+        ]);
 
         return response()->json([
             'success' => true,

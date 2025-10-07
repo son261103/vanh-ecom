@@ -67,7 +67,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, Order $order): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'status' => 'required|string|in:pending,confirmed,processing,shipped,delivered,cancelled',
+            'status' => 'required|string|in:pending,confirmed,processing,shipped,delivered,cancelled,completed,refunded',
         ]);
 
         if ($validator->fails()) {

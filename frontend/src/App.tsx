@@ -24,10 +24,11 @@ import { BrandList as AdminBrandList } from './pages/admin/brands/BrandList';
 import { CreateBrand as AdminBrandCreate } from './pages/admin/brands/CreateBrand';
 import { EditBrand as AdminBrandEdit } from './pages/admin/brands/EditBrand';
 import { AdminOrderList } from './pages/admin/orders/OrderList';
+import { AdminOrderDetail } from './pages/admin/orders/OrderDetail';
 import { AdminProfile } from './pages/admin/profile';
 
 // User Pages
-import { UserDashboard } from './pages/user/Dashboard';
+import { HomePage } from './pages/user/HomePage';
 import { ProductsPage } from './pages/user/products/ProductsPage';
 import { ProductDetail } from './pages/user/products/ProductDetail';
 import { CartPage } from './pages/user/cart/CartPage';
@@ -109,12 +110,23 @@ function App() {
           
           {/* Order Routes */}
           <Route path="orders" element={<AdminOrderList />} />
+          <Route path="orders/:id" element={<AdminOrderDetail />} />
           
           {/* Profile Routes */}
           <Route path="profile" element={<AdminProfile />} />
         </Route>
 
-        {/* User Routes */}
+        {/* Public User Routes - No authentication required */}
+        <Route path="/user" element={<UserLayout />}>
+          <Route index element={<HomePage />} />
+          <Route path="home" element={<HomePage />} />
+          
+          {/* Product Routes - Public */}
+          <Route path="products" element={<ProductsPage />} />
+          <Route path="products/:slug" element={<ProductDetail />} />
+        </Route>
+
+        {/* Protected User Routes - Authentication required */}
         <Route
           path="/user"
           element={
@@ -123,13 +135,6 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="/user/products" replace />} />
-          <Route path="dashboard" element={<UserDashboard />} />
-          
-          {/* Product Routes */}
-          <Route path="products" element={<ProductsPage />} />
-          <Route path="products/:slug" element={<ProductDetail />} />
-          
           {/* Cart & Checkout Routes */}
           <Route path="cart" element={<CartPage />} />
           <Route path="checkout" element={<CheckoutPage />} />
@@ -142,18 +147,14 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
         </Route>
 
-        {/* Root redirect based on authentication */}
+        {/* Root redirect */}
         <Route
           path="/"
           element={
-            isAuthenticated ? (
-              user?.role === 'admin' ? (
-                <Navigate to="/admin/dashboard" replace />
-              ) : (
-                <Navigate to="/user/dashboard" replace />
-              )
+            isAuthenticated && user?.role === 'admin' ? (
+              <Navigate to="/admin/dashboard" replace />
             ) : (
-              <Navigate to="/login" replace />
+              <Navigate to="/user/home" replace />
             )
           }
         />

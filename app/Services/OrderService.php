@@ -26,21 +26,21 @@ class OrderService
      */
     public function createOrderFromCart(User $user, array $orderData): Order
     {
-        return DB::transaction(function () use ($user, $orderData) {
-            // Validate cart
-            $cartValidation = $this->cartService->validateCart($user);
-            if (!$cartValidation['valid']) {
-                throw new \Exception('Cart validation failed: ' . implode(', ', $cartValidation['errors']));
-            }
+        // Validate cart BEFORE transaction
+        $cartValidation = $this->cartService->validateCart($user);
+        if (!$cartValidation['valid']) {
+            throw new \Exception('Cart validation failed: ' . implode(', ', $cartValidation['errors']));
+        }
 
-            // Get cart summary
-            $cartSummary = $this->cartService->getCartSummary($user);
-            $cartItems = $cartSummary['items'];
+        // Get cart summary BEFORE transaction
+        $cartSummary = $this->cartService->getCartSummary($user);
+        $cartItems = $cartSummary['items'];
 
-            if ($cartItems->isEmpty()) {
-                throw new \Exception('Cart is empty.');
-            }
+        if ($cartItems->isEmpty()) {
+            throw new \Exception('Cart is empty.');
+        }
 
+        return DB::transaction(function () use ($user, $orderData, $cartSummary, $cartItems) {
             // Create order
             $order = Order::create([
                 'user_id' => $user->id,
@@ -62,9 +62,11 @@ class OrderService
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'sku' => $product->sku,
                     'quantity' => $cartItem->quantity,
                     'unit_price' => $unitPrice,
-                    'total_price' => $unitPrice * $cartItem->quantity,
+                    'line_total' => $unitPrice * $cartItem->quantity,
                 ]);
 
                 // Update product stock
@@ -136,7 +138,7 @@ class OrderService
      */
     public function updateOrderStatus(Order $order, string $status): Order
     {
-        $allowedStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'];
+        $allowedStatuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'completed', 'refunded'];
         
         if (!in_array($status, $allowedStatuses)) {
             throw new \Exception('Invalid order status.');

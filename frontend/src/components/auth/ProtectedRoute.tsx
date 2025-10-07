@@ -38,11 +38,16 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    // Redirect to appropriate dashboard if role doesn't match
-    if (user?.role === 'admin') {
-      return <Navigate to="/admin/dashboard" replace />;
-    } else {
-      return <Navigate to="/user/dashboard" replace />;
+    // Admin can access both admin and customer routes
+    // Only redirect if customer tries to access admin routes
+    if (requiredRole === 'admin' && user?.role !== 'admin') {
+      return <Navigate to="/user/home" replace />;
+    }
+    // If customer tries to access admin, redirect to user dashboard
+    // Admin accessing customer routes is allowed (no redirect)
+    if (requiredRole === 'customer' && user?.role === 'admin') {
+      // Allow admin to view customer interface
+      return <>{children}</>;
     }
   }
 

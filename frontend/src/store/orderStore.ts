@@ -67,11 +67,14 @@ export const useOrderStore = create<OrderState>((set) => ({
   createOrder: async (data: CreateOrderData) => {
     set({ isLoading: true, error: null });
     try {
+      console.log('Creating order with data:', data);
       const order = await orderService.createOrder(data);
+      console.log('Order created successfully:', order);
       set({ currentOrder: order, isLoading: false });
       toast.success('Order created successfully');
       return order;
     } catch (error: any) {
+      console.error('Order creation failed:', error.response?.data || error.message);
       set({ error: error.message, isLoading: false });
       toast.error(error.response?.data?.message || 'Failed to create order');
       return null;

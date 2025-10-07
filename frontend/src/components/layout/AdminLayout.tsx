@@ -9,7 +9,8 @@ import {
   X,
   Package,
   Tag,
-  FolderTree
+  FolderTree,
+  Store
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../ui/Button';
@@ -112,6 +113,16 @@ export const AdminLayout: React.FC = () => {
             Chào mừng, {user?.name}!
           </h2>
           <div className="flex items-center space-x-4">
+            <Link to="/user">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-300 transition-colors"
+              >
+                <Store className="w-4 h-4" />
+                <span>Xem giao diện User</span>
+              </Button>
+            </Link>
             <span className="px-3 py-1 bg-primary-100 text-primary-600 rounded-full text-sm font-medium">
               Admin
             </span>

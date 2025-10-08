@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ChatbotController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Admin\BrandController as AdminBrandController;
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
@@ -85,6 +86,13 @@ Route::prefix('public')->middleware(['throttle.custom:public,120,1'])->group(fun
     Route::get('brands', [UserProductController::class, 'brands']);
     Route::get('categories/{slug}/products', [UserProductController::class, 'byCategory']);
     Route::get('brands/{slug}/products', [UserProductController::class, 'byBrand']);
+
+    // Chatbot
+    Route::prefix('chatbot')->group(function () {
+        Route::post('/send', [ChatbotController::class, 'sendMessage']);
+        Route::get('/suggestions', [ChatbotController::class, 'getSuggestions']);
+        Route::get('/info', [ChatbotController::class, 'getInfo']);
+    });
 });
 
 /*

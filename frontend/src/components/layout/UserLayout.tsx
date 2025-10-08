@@ -3,6 +3,7 @@ import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom';
 import { Home, ShoppingCart, User, LogOut, Package, Shield, LogIn } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../ui/Button';
+import { ChatButton } from '../chatbot/ChatButton';
 
 export const UserLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -175,6 +176,9 @@ export const UserLayout: React.FC = () => {
       <main className="w-full">
         <Outlet />
       </main>
+
+      {/* Chatbot Button - Floating */}
+      <ChatButton />
 
       {/* Footer */}
       <footer className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white mt-16">

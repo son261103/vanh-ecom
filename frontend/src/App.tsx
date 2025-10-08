@@ -36,6 +36,7 @@ import { CheckoutPage } from './pages/user/checkout/CheckoutPage';
 import { OrdersPage } from './pages/user/orders/OrdersPage';
 import { OrderDetail } from './pages/user/orders/OrderDetail';
 import { ProfilePage } from './pages/user/profile/ProfilePage';
+import { ChatbotPage } from './pages/user/chatbot/ChatbotPage';
 
 function App() {
   const { checkAuth, isAuthenticated, user } = useAuthStore();
@@ -124,6 +125,9 @@ function App() {
           {/* Product Routes - Public */}
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:slug" element={<ProductDetail />} />
+          
+          {/* Chatbot Route - Public */}
+          <Route path="chatbot" element={<ChatbotPage />} />
         </Route>
 
         {/* Protected User Routes - Authentication required */}

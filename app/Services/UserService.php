@@ -238,7 +238,7 @@ class UserService
     /**
      * Get user's favorite categories based on order history.
      */
-    private function getUserFavoriteCategories(User $user, int $limit = 3): Collection
+    private function getUserFavoriteCategories(User $user, int $limit = 3): \Illuminate\Support\Collection
     {
         return DB::table('order_items')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')

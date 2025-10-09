@@ -40,7 +40,10 @@ class ProductController extends Controller
         ];
 
         $perPage = $request->get('per_page', 12);
-        $products = $this->productService->getPaginatedProducts($filters, $perPage);
+        
+        // Don't load images for list view (performance optimization)
+        $includeImages = $request->boolean('include_images', false);
+        $products = $this->productService->getPaginatedProducts($filters, $perPage, $includeImages);
 
         return response()->json([
             'success' => true,
@@ -208,16 +211,21 @@ class ProductController extends Controller
     }
 
     /**
-     * Get all active categories.
+     * Get all active categories with caching.
      */
     public function categories(): JsonResponse
     {
-        $categories = Category::where('is_active', true)
-            ->withCount(['products' => function ($query) {
-                $query->where('is_active', true)->where('stock_quantity', '>', 0);
-            }])
-            ->orderBy('name')
-            ->get();
+        $categories = \Illuminate\Support\Facades\Cache::remember(
+            'categories.active',
+            now()->addHour(),
+            fn() => Category::select('id', 'name', 'slug', 'description', 'is_active')
+                ->where('is_active', true)
+                ->withCount(['products' => function ($query) {
+                    $query->where('is_active', true)->where('stock_quantity', '>', 0);
+                }])
+                ->orderBy('name')
+                ->get()
+        );
 
         return response()->json([
             'success' => true,
@@ -226,16 +234,21 @@ class ProductController extends Controller
     }
 
     /**
-     * Get all active brands.
+     * Get all active brands with caching.
      */
     public function brands(): JsonResponse
     {
-        $brands = Brand::where('is_active', true)
-            ->withCount(['products' => function ($query) {
-                $query->where('is_active', true)->where('stock_quantity', '>', 0);
-            }])
-            ->orderBy('name')
-            ->get();
+        $brands = \Illuminate\Support\Facades\Cache::remember(
+            'brands.active',
+            now()->addHour(),
+            fn() => Brand::select('id', 'name', 'slug', 'description', 'logo_url', 'is_active')
+                ->where('is_active', true)
+                ->withCount(['products' => function ($query) {
+                    $query->where('is_active', true)->where('stock_quantity', '>', 0);
+                }])
+                ->orderBy('name')
+                ->get()
+        );
 
         return response()->json([
             'success' => true,
@@ -266,11 +279,15 @@ class ProductController extends Controller
     }
 
     /**
-     * Get filter options.
+     * Get filter options with caching.
      */
     public function filterOptions(): JsonResponse
     {
-        $options = $this->productService->getFilterOptions();
+        $options = \Illuminate\Support\Facades\Cache::remember(
+            'filter.options',
+            now()->addHour(),
+            fn() => $this->productService->getFilterOptions()
+        );
 
         return response()->json([
             'success' => true,

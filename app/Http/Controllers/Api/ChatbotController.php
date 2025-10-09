@@ -114,8 +114,10 @@ class ChatbotController extends Controller
     private function extractProducts(string $message): array
     {
         // Extract product IDs from ```PRODUCTS:[id1,id2,id3]``` format
-        if (preg_match('/```PRODUCTS:\[(\d+(?:,\d+)*)\]```/', $message, $matches)) {
-            $ids = array_map('intval', explode(',', $matches[1]));
+        // Support both numeric and UUID formats
+        if (preg_match('/```PRODUCTS:\[([^\]]+)\]```/', $message, $matches)) {
+            // Split by comma and trim whitespace
+            $ids = array_map('trim', explode(',', $matches[1]));
             
             if (empty($ids)) {
                 return [];
@@ -136,10 +138,11 @@ class ChatbotController extends Controller
                     'products.price',
                     'products.sale_price',
                     'products.stock_quantity',
-                    DB::raw('COALESCE(product_images.url, "") as image'),
+                    DB::raw('CASE WHEN product_images.url IS NOT NULL THEN CONCAT("' . config('app.url') . '", product_images.url) ELSE NULL END as image'),
                     'products.description',
                     'categories.name as category_name',
-                    'brands.name as brand_name'
+                    'brands.name as brand_name',
+                    DB::raw('CONCAT("/user/products/", products.slug) as product_url')
                 )
                 ->whereIn('products.id', $ids)
                 ->where('products.is_active', true)

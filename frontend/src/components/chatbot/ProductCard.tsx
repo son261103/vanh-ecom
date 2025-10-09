@@ -2,7 +2,7 @@ import { ShoppingCart, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Product {
-  id: number;
+  id: string; // UUID từ backend
   name: string;
   slug: string;
   price: number;
@@ -12,6 +12,7 @@ interface Product {
   description: string;
   category_name: string;
   brand_name: string;
+  product_url?: string; // Link đầy đủ từ chatbot API
 }
 
 interface ProductCardProps {
@@ -24,6 +25,19 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   const displayPrice = product.sale_price || product.price;
   const hasDiscount = product.sale_price && product.sale_price < product.price;
   
+  // Fallback image SVG
+  const fallbackImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="300"%3E%3Crect width="300" height="300" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="18" fill="%239ca3af"%3ENo Image%3C/text%3E%3C/svg%3E';
+  
+  // Get image URL with fallback
+  const getImageUrl = (): string => {
+    if (!product.image) return fallbackImage;
+    // Nếu là full URL thì dùng luôn
+    if (product.image.startsWith('http')) return product.image;
+    // Nếu là relative path, thêm base URL (loại bỏ /api nếu có)
+    const baseUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost';
+    return `${baseUrl}${product.image}`;
+  };
+  
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -32,7 +46,12 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   };
   
   const handleViewProduct = () => {
-    navigate(`/user/products/${product.slug}`);
+    // Ưu tiên dùng product_url từ API, fallback về slug nếu không có
+    if (product.product_url) {
+      navigate(product.product_url);
+    } else {
+      navigate(`/user/products/${product.slug}`);
+    }
   };
 
   return (
@@ -40,11 +59,11 @@ export const ProductCard = ({ product }: ProductCardProps) => {
       {/* Image */}
       <div className="relative overflow-hidden bg-gray-100 aspect-square">
         <img
-          src={product.image}
+          src={getImageUrl()}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/300x300?text=No+Image';
+            (e.target as HTMLImageElement).src = fallbackImage;
           }}
         />
         

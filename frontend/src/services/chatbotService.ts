@@ -15,7 +15,7 @@ export interface SendMessageRequest {
 }
 
 export interface Product {
-  id: number;
+  id: string; // UUID từ backend
   name: string;
   slug: string;
   price: number;
@@ -25,6 +25,7 @@ export interface Product {
   description: string;
   category_name: string;
   brand_name: string;
+  product_url?: string; // Link đầy đủ từ chatbot API
 }
 
 export interface SendMessageResponse {

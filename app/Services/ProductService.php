@@ -15,11 +15,55 @@ class ProductService
 {
     /**
      * Get paginated products with optional filters.
+     *
+     * @param array<string, mixed> $filters Array of filter options
+     * @param int $perPage Number of items per page
+     * @param bool $includeImages Whether to include product images (default: false for list views)
+     * @return LengthAwarePaginator<Product>
      */
-    public function getPaginatedProducts(array $filters = [], int $perPage = 15): LengthAwarePaginator
-    {
-        $query = Product::with(['brand', 'category', 'images'])
-            ->where('is_active', true);
+    public function getPaginatedProducts(
+        array $filters = [],
+        int $perPage = 15,
+        bool $includeImages = false
+    ): LengthAwarePaginator {
+        $query = Product::query()
+            ->select([
+                'products.id',
+                'products.name',
+                'products.slug',
+                'products.description',
+                'products.sku',
+                'products.price',
+                'products.sale_price',
+                'products.stock_quantity',
+                'products.category_id',
+                'products.brand_id',
+                'products.is_active',
+                'products.is_featured',
+                'products.created_at',
+                'products.updated_at',
+            ])
+            ->where('products.is_active', true)
+            ->with([
+                'brand:id,name,slug',
+                'category:id,name,slug',
+            ]);
+
+        // Always load at least first image for thumbnails (optimized)
+        // Load all images only for detail views
+        if ($includeImages) {
+            // Detail view: Load all images
+            $query->with('images:id,product_id,url,alt_text,sort_order');
+        } else {
+            // List view: Load only first image (primary) based on sort_order
+            $query->with([
+                'images' => function ($q) {
+                    $q->select('id', 'product_id', 'url', 'alt_text', 'sort_order')
+                      ->orderBy('sort_order')
+                      ->limit(1);  // Only get first image for list view
+                }
+            ]);
+        }
 
         // Apply filters
         if (!empty($filters['search'])) {

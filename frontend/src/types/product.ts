@@ -14,6 +14,7 @@ export interface Product {
   brand?: Brand;
   category?: Category;
   images?: ProductImage[];
+  primary_image_url?: string;  // Optimized: Primary image URL for list views
   created_at: string;
   updated_at: string;
 }
@@ -21,8 +22,9 @@ export interface Product {
 export interface ProductImage {
   id: string;
   product_id: string;
-  image_url: string;
-  is_primary: boolean;
+  url: string;  // Fixed: Backend returns 'url', not 'image_url'
+  image_url?: string;  // Deprecated: For backward compatibility
+  alt_text?: string;
   sort_order: number;
 }
 

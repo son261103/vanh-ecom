@@ -22,7 +22,20 @@ interface FormData extends ProductCreateData {
 export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isLoading }) => {
   const navigate = useNavigate();
   const { categories, brands, fetchCategories, fetchBrands } = useCatalogStore();
-  const [imagePreviews, setImagePreviews] = useState<string[]>(product?.images?.map(img => img.url) || []);
+  
+  // Initialize image previews from existing product
+  const getInitialPreviews = () => {
+    if (product?.images && product.images.length > 0) {
+      return product.images.map(img => img.url || img.image_url).filter(Boolean);
+    }
+    // If no images array, try primary_image_url
+    if (product?.primary_image_url) {
+      return [product.primary_image_url];
+    }
+    return [];
+  };
+  
+  const [imagePreviews, setImagePreviews] = useState<string[]>(getInitialPreviews());
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   
   const {
@@ -43,8 +56,18 @@ export const ProductForm: React.FC<ProductFormProps> = ({ product, onSubmit, isL
     if (product) {
       reset(product);
       // Update image previews with full URLs
+      const previews = [];
+      
       if (product.images && product.images.length > 0) {
-        setImagePreviews(product.images.map(img => getImageUrl(img.url)));
+        // Has full images array (detail view)
+        previews.push(...product.images.map(img => getImageUrl(img.url || img.image_url)));
+      } else if (product.primary_image_url) {
+        // Only has primary image (list view)
+        previews.push(getImageUrl(product.primary_image_url));
+      }
+      
+      if (previews.length > 0) {
+        setImagePreviews(previews);
       }
     }
   }, [product, reset]);

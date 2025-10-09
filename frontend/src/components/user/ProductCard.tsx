@@ -19,9 +19,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Image */}
         <div className="relative aspect-square bg-gray-200 overflow-hidden">
           <ImageWithSkeleton
-            src={product.images && product.images.length > 0 
-              ? getImageUrl(product.images[0].image_url || product.images[0].url)
-              : getPlaceholderImage()}
+            src={product.primary_image_url 
+              ? getImageUrl(product.primary_image_url)
+              : (product.images && product.images.length > 0 
+                  ? getImageUrl(product.images[0].image_url || product.images[0].url)
+                  : getPlaceholderImage())}
             alt={product.name}
             fallbackSrc={getPlaceholderImage()}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"

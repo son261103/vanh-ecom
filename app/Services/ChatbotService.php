@@ -358,9 +358,11 @@ Ví dụ chuẩn:
             $enhancedPrompt .= "2. NÊU TÊN SẢN PHẨM, ƯU ĐIỂM, và lý do nên chọn\n";
             $enhancedPrompt .= "3. Ở cuối câu trả lời, LUÔN LUÔN PHẢI thêm dòng này (không được bỏ qua):\n";
             $enhancedPrompt .= "   ```PRODUCTS:[id1,id2,id3]```\n";
-            $enhancedPrompt .= "   Ví dụ nếu giới thiệu sản phẩm có ID 5, 10, 15: ```PRODUCTS:[5,10,15]```\n";
+            $enhancedPrompt .= "   Ví dụ: Nếu giới thiệu 2 sản phẩm có ID a5004fcb-a534-11f0-9864-3e9dac532614 và 4f3e956c-a2dc-11f0-9864-3e9dac532614:\n";
+            $enhancedPrompt .= "   ```PRODUCTS:[a5004fcb-a534-11f0-9864-3e9dac532614,4f3e956c-a2dc-11f0-9864-3e9dac532614]```\n";
             $enhancedPrompt .= "4. Chọn TỐI THIỂU 2-3 sản phẩm để giới thiệu cho khách\n";
             $enhancedPrompt .= "5. CHÚ Ý: Dòng ```PRODUCTS:[...]``` phải nằm ở CUỐI CÙNG, trên một dòng riêng\n";
+            $enhancedPrompt .= "6. QUAN TRỌNG: Sử dụng đúng ID từ danh sách trên (UUID format với dấu gạch ngang)\n";
         }
 
         // Add system prompt as first user message with model response

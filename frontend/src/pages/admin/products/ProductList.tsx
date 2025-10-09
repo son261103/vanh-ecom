@@ -73,9 +73,9 @@ export const ProductList: React.FC = () => {
       label: 'Sản phẩm',
       render: (value: string, row: any) => (
         <div className="flex items-center">
-          {row.primary_image || (row.images && row.images.length > 0) ? (
+          {row.primary_image_url || (row.images && row.images.length > 0) ? (
             <img
-              src={getImageUrl(row.primary_image || row.images[0]?.url)}
+              src={getImageUrl(row.primary_image_url || row.images[0]?.url || row.images[0]?.image_url)}
               alt={value}
               className="h-12 w-12 flex-shrink-0 object-cover rounded border border-gray-200"
               onError={(e) => {

@@ -5,15 +5,22 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\CategoryResource;
 use App\Models\Category;
+use App\Services\CloudinaryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class CategoryController extends Controller
 {
+    protected CloudinaryService $cloudinaryService;
+
+    public function __construct(CloudinaryService $cloudinaryService)
+    {
+        $this->cloudinaryService = $cloudinaryService;
+    }
     /**
      * Display a listing of categories.
      */
@@ -88,12 +95,18 @@ class CategoryController extends Controller
             $counter++;
         }
 
-        // Handle image upload
+        // Handle image upload to Cloudinary
         if ($request->hasFile('image')) {
             $image = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name']) . '.' . $image->getClientOriginalExtension();
-            $path = $image->storeAs('categories', $filename, 'public');
-            $data['image_url'] = Storage::url($path);
+            $result = $this->cloudinaryService->uploadImage($image, 'categories');
+            
+            if ($result['success']) {
+                $data['image_url'] = $result['url'];
+            } else {
+                Log::error('Failed to upload category image to Cloudinary', [
+                    'error' => $result['error'] ?? 'Unknown error',
+                ]);
+            }
         }
 
         // Set default is_active if not provided
@@ -163,20 +176,26 @@ class CategoryController extends Controller
             }
         }
 
-        // Handle image upload
+        // Handle image upload to Cloudinary
         if ($request->hasFile('image')) {
-            // Delete old image if exists
+            // Delete old image from Cloudinary if exists
             if ($category->image_url) {
-                $oldImagePath = str_replace('/storage/', '', $category->image_url);
-                if (Storage::disk('public')->exists($oldImagePath)) {
-                    Storage::disk('public')->delete($oldImagePath);
+                $publicId = $this->cloudinaryService->extractPublicId($category->image_url);
+                if ($publicId) {
+                    $this->cloudinaryService->deleteImage($publicId);
                 }
             }
 
             $image = $request->file('image');
-            $filename = time() . '_' . Str::slug($data['name'] ?? $category->name) . '.' . $image->getClientOriginalExtension();
-            $path = $image->storeAs('categories', $filename, 'public');
-            $data['image_url'] = Storage::url($path);
+            $result = $this->cloudinaryService->uploadImage($image, 'categories');
+            
+            if ($result['success']) {
+                $data['image_url'] = $result['url'];
+            } else {
+                Log::error('Failed to upload category image to Cloudinary', [
+                    'error' => $result['error'] ?? 'Unknown error',
+                ]);
+            }
         }
 
         $category->update($data);

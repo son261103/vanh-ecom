@@ -103,16 +103,16 @@ export const ProductDetail: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         {/* Images Section */}
-        <div className="space-y-4" data-aos="fade-right">
+        <div className="space-y-4 max-w-xl mx-auto lg:mx-0" data-aos="fade-right">
           <Card padding="none" className="overflow-hidden">
-            <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 relative group">
+            <div className="aspect-square bg-white relative group">
               {selectedImage ? (
                 <>
                   <img
                     src={getImageUrl(selectedImage.image_url || selectedImage.url)}
                     alt={currentProduct.name}
                     onError={(e) => e.currentTarget.src = getPlaceholderImage()}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-6"
                   />
                   {hasDiscount && (
                     <div className="absolute top-4 left-4 bg-rose-500 text-white px-3 py-1.5 rounded-full font-bold text-sm shadow-lg">
@@ -151,7 +151,7 @@ export const ProductDetail: React.FC = () => {
                     src={getImageUrl(img.image_url || img.url)}
                     alt={`${currentProduct.name} ${index + 1}`}
                     onError={(e) => e.currentTarget.src = getPlaceholderImage()}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain p-2"
                   />
                 </button>
               ))}

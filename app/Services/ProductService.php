@@ -8,11 +8,17 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ProductService
 {
+    protected CloudinaryService $cloudinaryService;
+
+    public function __construct(CloudinaryService $cloudinaryService)
+    {
+        $this->cloudinaryService = $cloudinaryService;
+    }
     /**
      * Get paginated products with optional filters.
      *
@@ -215,9 +221,18 @@ class ProductService
             $data['slug'] = $this->generateUniqueSlug($data['slug']);
 
             $product = Product::create($data);
+            $product->refresh(); // IMPORTANT: Refresh to get the UUID primary key
+            
+            Log::info('Product created', [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'has_images' => !empty($images),
+                'images_count' => count($images)
+            ]);
 
             // Handle image uploads
             if (!empty($images)) {
+                Log::info('About to sync images', ['product_id' => $product->id]);
                 $this->syncProductImages($product, $images);
             }
 
@@ -484,38 +499,67 @@ class ProductService
     }
 
     /**
-     * Sync product images - upload new images and delete old ones.
+     * Sync product images - upload new images to Cloudinary and delete old ones.
      */
     private function syncProductImages(Product $product, array $images): void
     {
+        $productId = $product->id ?? $product->getKey() ?? 'unknown';
+        Log::info('syncProductImages called', [
+            'product_id' => $productId,
+            'product_exists' => $product->exists,
+            'images_count' => count($images),
+            'images_types' => array_map('get_class', $images)
+        ]);
+        
         // If images array is empty, do nothing
         if (empty($images)) {
+            Log::info('No images to sync');
             return;
         }
 
-        // Delete all old images
+        // Delete all old images from Cloudinary
         foreach ($product->images as $oldImage) {
-            // Delete file from storage
-            $path = str_replace('/storage/', '', $oldImage->url);
-            if (Storage::disk('public')->exists($path)) {
-                Storage::disk('public')->delete($path);
+            // Extract public_id from URL if it's a Cloudinary URL
+            $publicId = $this->cloudinaryService->extractPublicId($oldImage->url);
+            if ($publicId) {
+                $this->cloudinaryService->deleteImage($publicId);
             }
         }
         $product->images()->delete();
 
-        // Upload and save new images
+        // Upload and save new images to Cloudinary
         foreach ($images as $index => $image) {
+            Log::info("Processing image {$index}", [
+                'is_uploaded_file' => $image instanceof UploadedFile,
+                'file_name' => $image instanceof UploadedFile ? $image->getClientOriginalName() : 'not a file'
+            ]);
+            
             if ($image instanceof UploadedFile) {
-                $filename = time() . '_' . $index . '_' . Str::slug($product->name) . '.' . $image->getClientOriginalExtension();
-                $path = $image->storeAs('products', $filename, 'public');
-                $url = Storage::url($path);
-
-                ProductImage::create([
-                    'product_id' => $product->id,
-                    'url' => $url,
-                    'alt_text' => $product->name,
-                    'sort_order' => $index,
+                // Upload to Cloudinary
+                Log::info("Uploading image {$index} to Cloudinary");
+                $result = $this->cloudinaryService->uploadImage($image, 'products');
+                
+                Log::info("Cloudinary upload result for image {$index}", [
+                    'success' => $result['success'] ?? false,
+                    'url' => $result['url'] ?? null,
+                    'error' => $result['error'] ?? null
                 ]);
+                
+                if ($result['success']) {
+                    $imageRecord = ProductImage::create([
+                        'product_id' => $product->id,
+                        'url' => $result['url'], // Cloudinary secure URL
+                        'alt_text' => $product->name,
+                        'sort_order' => $index,
+                    ]);
+                    Log::info("Image saved to DB", ['image_id' => $imageRecord->id, 'url' => $imageRecord->url]);
+                } else {
+                    Log::error('Failed to upload product image to Cloudinary', [
+                        'product_id' => $product->id,
+                        'index' => $index,
+                        'error' => $result['error'] ?? 'Unknown error',
+                    ]);
+                }
             }
         }
     }

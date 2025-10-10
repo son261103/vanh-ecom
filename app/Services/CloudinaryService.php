@@ -2,12 +2,27 @@
 
 namespace App\Services;
 
-use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Cloudinary\Cloudinary as CloudinarySDK;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 
 class CloudinaryService
 {
+    protected CloudinarySDK $cloudinary;
+
+    public function __construct()
+    {
+        $this->cloudinary = new CloudinarySDK([
+            'cloud' => [
+                'cloud_name' => config('cloudinary.cloud_name'),
+                'api_key' => config('cloudinary.api_key'),
+                'api_secret' => config('cloudinary.api_secret'),
+            ],
+            'url' => [
+                'secure' => true
+            ]
+        ]);
+    }
     /**
      * Upload an image to Cloudinary.
      *
@@ -28,19 +43,24 @@ class CloudinaryService
 
             $uploadOptions = array_merge($defaultOptions, $options);
 
-            $result = Cloudinary::upload($file->getRealPath(), $uploadOptions);
-
+            $uploadResult = $this->cloudinary->uploadApi()->upload($file->getRealPath(), $uploadOptions);
+            
+            // Cloudinary SDK returns ApiResponse object which acts like array
+            // Access data using ArrayAccess interface
             return [
                 'success' => true,
-                'url' => $result->getSecurePath(),
-                'public_id' => $result->getPublicId(),
-                'width' => $result->getWidth(),
-                'height' => $result->getHeight(),
-                'format' => $result->getExtension(),
-                'size' => $result->getSize(),
+                'url' => $uploadResult['secure_url'] ?? $uploadResult['url'] ?? '',
+                'public_id' => $uploadResult['public_id'] ?? '',
+                'width' => $uploadResult['width'] ?? null,
+                'height' => $uploadResult['height'] ?? null,
+                'format' => $uploadResult['format'] ?? null,
+                'size' => $uploadResult['bytes'] ?? null,
             ];
         } catch (\Exception $e) {
-            Log::error('Cloudinary upload failed: ' . $e->getMessage());
+            Log::error('Cloudinary upload failed: ' . $e->getMessage(), [
+                'file' => $file->getClientOriginalName(),
+                'trace' => $e->getTraceAsString()
+            ]);
             
             return [
                 'success' => false,
@@ -95,7 +115,7 @@ class CloudinaryService
     public function deleteImage(string $publicId): array
     {
         try {
-            $result = Cloudinary::destroy($publicId);
+            $result = $this->cloudinary->uploadApi()->destroy($publicId);
 
             return [
                 'success' => $result['result'] === 'ok',
@@ -121,7 +141,7 @@ class CloudinaryService
     public function getTransformedUrl(string $publicId, array $transformations = []): string
     {
         try {
-            return Cloudinary::getUrl($publicId, $transformations);
+            return $this->cloudinary->image($publicId)->toUrl();
         } catch (\Exception $e) {
             Log::error('Cloudinary URL generation failed: ' . $e->getMessage());
             return '';

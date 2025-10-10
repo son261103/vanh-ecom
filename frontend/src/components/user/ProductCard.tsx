@@ -17,7 +17,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     <Link to={`/user/products/${product.slug}`} className="group">
       <div className="bg-white rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 hover:border-primary-200 hover:-translate-y-1">
         {/* Image */}
-        <div className="relative aspect-square bg-gray-200 overflow-hidden">
+        <div className="relative aspect-square bg-white overflow-hidden">
           <ImageWithSkeleton
             src={product.primary_image_url 
               ? getImageUrl(product.primary_image_url)
@@ -26,7 +26,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   : getPlaceholderImage())}
             alt={product.name}
             fallbackSrc={getPlaceholderImage()}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-contain p-4 group-hover:scale-105 transition-transform duration-300"
             skeletonClassName="rounded-t-xl"
           />
           

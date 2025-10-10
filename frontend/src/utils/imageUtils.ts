@@ -1,16 +1,17 @@
 /**
  * Get full image URL from storage path
- * @param path - Image path from storage (e.g., "/storage/products/image.jpg")
+ * @param path - Image path from storage (e.g., "/storage/products/image.jpg" or Cloudinary URL)
  * @returns Full URL to the image
  */
 export const getImageUrl = (path: string | null | undefined): string => {
   if (!path) return '';
   
-  // If path already starts with http/https, return as is
+  // If path already starts with http/https (Cloudinary or full URL), return as is
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
   
+  // For relative paths (legacy local storage), prepend backend URL
   // Get backend URL from env or use default
   const backendUrl = import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:8000';
   
